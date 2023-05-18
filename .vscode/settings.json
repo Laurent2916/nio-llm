@@ -1,0 +1,27 @@
+{
+  "python.defaultInterpreterPath": ".venv/bin/python",
+  "python.analysis.typeCheckingMode": "basic",
+  "python.formatting.provider": "black",
+  "editor.formatOnSave": true,
+  "python.linting.enabled": true,
+  "python.linting.lintOnSave": true,
+  "python.linting.mypyEnabled": true,
+  "python.linting.banditEnabled": true,
+  "python.languageServer": "Pylance",
+  "[python]": {
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": true
+    }
+  },
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "**/__pycache__": true,
+    "**/.mypy_cache": true,
+    "**/.direnv": true,
+  },
+}
