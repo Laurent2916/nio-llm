@@ -11,6 +11,7 @@ version = "0.1.0"
 [tool.poetry.dependencies]
 python = "^3.11"
 matrix-nio = "^0.20.2"
+llama-cpp-python = "^0.1.50"
 
 [tool.poetry.group.dev]
 optional = true
