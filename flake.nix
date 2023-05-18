@@ -1,13 +1,16 @@
 {
   description = "nio-llm";
 
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-  inputs.flake-utils.url = "github:numtide/flake-utils";
-  inputs.poetry2nix = {
-    url = "github:nix-community/poetry2nix";
-    inputs = {
-      nixpkgs.follows = "nixpkgs";
-      flake-utils.follows = "flake-utils";
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
+
+    poetry2nix = {
+      url = "github:nix-community/poetry2nix";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        flake-utils.follows = "flake-utils";
+      };
     };
   };
 
@@ -24,9 +27,7 @@
           preferWheels = true;
           python = pkgs.python311;
         };
-
       in {
-
         packages.default = pkgs.poetry2nix.mkPoetryApplication {
           projectDir = ./.;
           preferWheels = true;
@@ -36,5 +37,4 @@
         devShells.default =
           pkgs.mkShell { buildInputs = [ pythonEnv pkgs.poetry ]; };
       });
-
 }
