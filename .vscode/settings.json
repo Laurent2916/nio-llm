@@ -22,5 +22,6 @@
     "**/__pycache__": true,
     "**/.mypy_cache": true,
     "**/.direnv": true,
+    "**/.ruff_cache": true,
   },
 }

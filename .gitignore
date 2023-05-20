@@ -1,5 +1,5 @@
 .direnv
-
+.ruff_cache
 
 # https://github.com/github/gitignore/blob/main/Python.gitignore
 # Basic .gitignore for a python repo
