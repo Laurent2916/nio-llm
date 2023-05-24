@@ -22,20 +22,22 @@ class LLMClient(AsyncClient):
         homeserver: str,
         device_id: str,
         preprompt: str,
-        room: str,
         ggml_path: str,
+        room: str,
     ):
         """Create a new LLMClient instance."""
-        super().__init__(
-            user=f"@{username}:{homeserver.removeprefix('https://')}",
-            homeserver=homeserver,
-            device_id=device_id,
-        )
-
+        self.uid = f"@{username}:{homeserver.removeprefix('https://')}"
         self.spawn_time = time.time() * 1000
         self.username = username
         self.preprompt = preprompt
         self.room = room
+
+        # create the AsyncClient instance
+        super().__init__(
+            user=self.uid,
+            homeserver=homeserver,
+            device_id=device_id,
+        )
 
         # create the Llama instance
         self.llm = Llama(
@@ -48,36 +50,47 @@ class LLMClient(AsyncClient):
 
     async def message_callback(self, room: MatrixRoom, event: RoomMessageText):
         """Process new messages as they come in."""
-        logger.debug(f"Received new message in room {room.room_id}.")
-        logger.debug(f"Message body: {event.body}")
+        logger.debug(f"New RoomMessageText: {event.source}")
 
         # ignore our own messages
         if event.sender == self.user:
             logger.debug("Ignoring our own message.")
             return
 
-        # ignore messages pre-spawn
+        # ignore messages pre-dating our spawn time
         if event.server_timestamp < self.spawn_time:
             logger.debug("Ignoring message pre-spawn.")
             return
 
-        # ignore messages sent in other rooms
+        # ignore messages not in our monitored room
         if room.room_id != self.room:
             logger.debug("Ignoring message in different room.")
             return
 
-        if self.username not in event.body:
+        # ignore edited messages
+        if "m.new_content" in event.source["content"]:
+            logger.debug("Ignoring edited message.")
+            return
+
+        # ignore messages not mentioning us
+        if not (
+            "format" in event.source["content"]
+            and "formatted_body" in event.source["content"]
+            and event.source["content"]["format"] == "org.matrix.custom.html"
+            and f'<a href="https://matrix.to/#/{self.uid}">{self.username}</a>'
+            in event.source["content"]["formatted_body"]
+        ):
             logger.debug("Ignoring message not directed at us.")
             return
 
+        # generate prompt from message
         prompt = dedent(
             f"""
             {self.preprompt}
             <{event.sender}>: {event.body}
-            <pipobot>:
+            <{self.username}>:
             """,
         ).strip()
-
         logger.debug(f"Prompt: {prompt}")
 
         # enable typing indicator
@@ -87,6 +100,7 @@ class LLMClient(AsyncClient):
             timeout=100000000,
         )
 
+        # generate response using llama.cpp
         output = self.llm(
             prompt,
             max_tokens=100,
