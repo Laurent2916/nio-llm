@@ -9,6 +9,7 @@ import click
 from huggingface_hub import hf_hub_download
 from llama_cpp import Llama
 from nio import AsyncClient, MatrixRoom, RoomMessageText
+from rich.logging import RichHandler
 
 logger = logging.getLogger("nio-llm")
 
@@ -188,10 +189,10 @@ async def _main(
     )
 
     # Login to the homeserver
-    print(await client.login(password))
+    logger.debug(await client.login(password))
 
     # Join the room, if not already joined
-    print(await client.join(room))
+    logger.debug(await client.join(room))
 
     # Sync with the server forever
     await client.sync_forever(timeout=30000)
@@ -199,7 +200,12 @@ async def _main(
 
 if __name__ == "__main__":
     # set up logging
-    logging.basicConfig(level=logging.DEBUG)
+    logging.captureWarnings(True)
+    logging.basicConfig(
+        level="DEBUG",
+        format="%(name)s: %(message)s",
+        handlers=[RichHandler(markup=True)],
+    )
 
     # run the main program (with environment variables)
     main(auto_envvar_prefix="NIOLLM")
