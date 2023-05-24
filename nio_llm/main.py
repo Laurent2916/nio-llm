@@ -21,12 +21,13 @@ logger = logging.getLogger("nio-llm.main")
 @click.option("--room", "-r", help="The room to join.", required=True)
 @click.option("--preprompt", "-t", help="The preprompt to use.", required=True)
 def main(
-    homeserver: str,
-    device_id: str,
-    username: str,
-    password: str,
+    *,
     room: str,
+    password: str,
+    username: str,
+    device_id: str,
     preprompt: str,
+    homeserver: str,
 ) -> None:
     """Run the main program.
 
@@ -43,25 +44,26 @@ def main(
     # start the async loop
     asyncio.get_event_loop().run_until_complete(
         _main(
-            ggml_path=ggml_path,
-            homeserver=homeserver,
-            device_id=device_id,
-            username=username,
-            password=password,
-            preprompt=preprompt,
             room=room,
+            password=password,
+            username=username,
+            device_id=device_id,
+            ggml_path=ggml_path,
+            preprompt=preprompt,
+            homeserver=homeserver,
         ),
     )
 
 
 async def _main(
-    homeserver: str,
-    device_id: str,
-    username: str,
+    *,
+    room: str,
     password: str,
+    username: str,
+    device_id: str,
     preprompt: str,
     ggml_path: Path,
-    room: str,
+    homeserver: str,
 ) -> None:
     """Run the async main program.
 
@@ -69,12 +71,12 @@ async def _main(
     """
     # create the client
     client = LLMClient(
-        homeserver=homeserver,
-        device_id=device_id,
-        username=username,
         room=room,
-        preprompt=preprompt,
+        username=username,
+        device_id=device_id,
         ggml_path=ggml_path,
+        preprompt=preprompt,
+        homeserver=homeserver,
     )
 
     # Login to the homeserver
