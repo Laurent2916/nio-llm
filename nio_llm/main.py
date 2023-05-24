@@ -59,9 +59,9 @@ async def _main(
     device_id: str,
     username: str,
     password: str,
-    room: str,
     preprompt: str,
     ggml_path: Path,
+    room: str,
 ) -> None:
     """Run the async main program.
 
