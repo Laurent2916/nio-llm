@@ -27,7 +27,9 @@ ruff = "^0.0.267"
 
 [tool.ruff]
 line-length = 120
-ignore = ["G004"]
+ignore = [
+  "G004", # Logging statement uses f-string
+]
 select = [
   "A",   # flake8-builtins
   "B",   # flake8-bugbear
