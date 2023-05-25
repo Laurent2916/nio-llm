@@ -14,12 +14,44 @@ logger = logging.getLogger("nio-llm.main")
 
 
 @click.command()
-@click.option("--homeserver", "-h", help="The homeserver to connect to.", required=True)
-@click.option("--device-id", "-d", help="The device ID to use.", required=True)
-@click.option("--username", "-u", help="The username to log in as.", required=True)
-@click.option("--password", "-p", help="The password to log in with.", required=True)
-@click.option("--room", "-r", help="The room to join.", required=True)
-@click.option("--preprompt", "-t", help="The preprompt to use.", required=True)
+@click.option(
+    "--homeserver",
+    "-h",
+    help="The homeserver to connect to.",
+    default="https://matrix.org",
+    show_default=True,
+)
+@click.option(
+    "--username",
+    "-u",
+    help="The username to log in as.",
+    required=True,
+)
+@click.option(
+    "--password",
+    "-p",
+    help="The password to log in with.",
+    required=True,
+)
+@click.option(
+    "--room",
+    "-r",
+    help="The room to join.",
+    required=True,
+)
+@click.option(
+    "--device-id",
+    "-d",
+    help="The device ID to use.",
+    default="nio-llm",
+    show_default=True,
+)
+@click.option(
+    "--preprompt",
+    "-t",
+    help="The preprompt to use.",
+    required=True,
+)
 def main(
     *,
     room: str,
