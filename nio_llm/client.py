@@ -69,6 +69,14 @@ class LLMClient(AsyncClient):
             logger.debug("Ignoring edited message.")
             return
 
+        # ignore thread messages
+        if (
+            "m.relates_to" in event.source["content"]
+            and event.source["content"]["m.relates_to"]["rel_type"] == "m.thread"
+        ):
+            logger.debug("Ignoring thread message.")
+            return
+
         # update history
         self.history.append(event)
 
@@ -95,6 +103,7 @@ class LLMClient(AsyncClient):
         logger.debug(f"Prompt:\n{prompt}")
         logger.debug(f"Tokens: {len(tokens)}")
 
+        # ignore prompts that are too long
         if len(tokens) > 512:
             logger.debug("Prompt too long, skipping.")
             await self.room_send(
