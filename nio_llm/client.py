@@ -23,7 +23,16 @@ class LLMClient(AsyncClient):
         ggml_path: Path,
         room: str,
     ):
-        """Create a new LLMClient instance."""
+        """Create a new LLMClient instance.
+
+        Args:
+            username (`str`): The username to log in as.
+            homeserver (`str`): The homeserver to connect to.
+            device_id (`str`): The device ID to use.
+            preprompt (`str`): The preprompt to use.
+            ggml_path (`Path`): The path to the GGML model.
+            room (`str`): The room to join.
+        """
         self.uid = f"@{username}:{homeserver.removeprefix('https://')}"
         self.spawn_time = time.time() * 1000
         self.username = username
@@ -50,8 +59,13 @@ class LLMClient(AsyncClient):
         # add callbacks
         self.add_event_callback(self.message_callback, RoomMessageText)  # type: ignore
 
-    async def message_callback(self, room: MatrixRoom, event: RoomMessageText):
-        """Process new messages as they come in."""
+    async def message_callback(self, room: MatrixRoom, event: RoomMessageText) -> None:
+        """Process new messages as they come in.
+
+        Args:
+            room (`MatrixRoom`): The room the message was sent in.
+            event (`RoomMessageText`): The message event.
+        """
         logger.debug(f"New RoomMessageText: {event.source}")
 
         # ignore messages pre-dating our spawn time
@@ -148,3 +162,19 @@ class LLMClient(AsyncClient):
                 "body": output,
             },
         )
+
+    async def start(self, password, sync_timeout=30000):
+        """Start the client.
+
+        Args:
+            password (`str`): The password to log in with.
+            sync_timeout (`int`, default `30000`): The sync timeout in milliseconds.
+        """
+        # Login to the homeserver
+        logger.debug(await self.login(password))
+
+        # Join the room, if not already joined
+        logger.debug(await self.join(self.room))
+
+        # Sync with the server forever
+        await self.sync_forever(timeout=sync_timeout)

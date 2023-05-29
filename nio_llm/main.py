@@ -66,6 +66,13 @@ logger = logging.getLogger("nio-llm.main")
     default="stable-vicuna-13B.ggmlv3.q5_1.bin",
     show_default=True,
 )
+@click.option(
+    "--sync-timeout",
+    "-s",
+    help="The timeout to use when syncing with the homeserver.",
+    default=30000,
+    show_default=True,
+)
 def main(
     *,
     room: str,
@@ -76,6 +83,7 @@ def main(
     homeserver: str,
     ggml_repoid: str,
     ggml_filename: str,
+    sync_timeout: int,
 ) -> None:
     """Run the main program.
 
@@ -89,34 +97,6 @@ def main(
         ),
     )
 
-    # start the async loop
-    asyncio.get_event_loop().run_until_complete(
-        _main(
-            room=room,
-            password=password,
-            username=username,
-            device_id=device_id,
-            ggml_path=ggml_path,
-            preprompt=preprompt,
-            homeserver=homeserver,
-        ),
-    )
-
-
-async def _main(
-    *,
-    room: str,
-    password: str,
-    username: str,
-    device_id: str,
-    preprompt: str,
-    ggml_path: Path,
-    homeserver: str,
-) -> None:
-    """Run the async main program.
-
-    Create the client, login, join the room, and sync forever.
-    """
     # create the client
     client = LLMClient(
         room=room,
@@ -127,14 +107,13 @@ async def _main(
         homeserver=homeserver,
     )
 
-    # Login to the homeserver
-    logger.debug(await client.login(password))
-
-    # Join the room, if not already joined
-    logger.debug(await client.join(room))
-
-    # Sync with the server forever
-    await client.sync_forever(timeout=30000)
+    # start the client
+    asyncio.get_event_loop().run_until_complete(
+        client.start(
+            password=password,
+            sync_timeout=sync_timeout,
+        ),
+    )
 
 
 if __name__ == "__main__":
