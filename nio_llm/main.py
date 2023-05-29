@@ -52,6 +52,20 @@ logger = logging.getLogger("nio-llm.main")
     help="The preprompt to use.",
     required=True,
 )
+@click.option(
+    "--ggml-repoid",
+    "-g",
+    help="The HuggingFace Hub repo ID to download the model from.",
+    default="TheBloke/stable-vicuna-13B-GGML",
+    show_default=True,
+)
+@click.option(
+    "--ggml-filename",
+    "-f",
+    help="The HuggingFace Hub filename to download the model from.",
+    default="stable-vicuna-13B.ggmlv3.q5_1.bin",
+    show_default=True,
+)
 def main(
     *,
     room: str,
@@ -60,6 +74,8 @@ def main(
     device_id: str,
     preprompt: str,
     homeserver: str,
+    ggml_repoid: str,
+    ggml_filename: str,
 ) -> None:
     """Run the main program.
 
@@ -68,8 +84,8 @@ def main(
     # download the model
     ggml_path = Path(
         hf_hub_download(
-            repo_id="TheBloke/stable-vicuna-13B-GGML",
-            filename="stable-vicuna-13B.ggmlv3.q5_1.bin",
+            repo_id=ggml_repoid,
+            filename=ggml_filename,
         ),
     )
 
