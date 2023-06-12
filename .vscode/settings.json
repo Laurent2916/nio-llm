@@ -12,6 +12,9 @@
       "source.organizeImports": true
     }
   },
+  "terminal.integrated.env.linux": {
+    "PYTHONPATH": "${workspaceFolder}"
+  },
   "files.exclude": {
     "**/.git": true,
     "**/.svn": true,
