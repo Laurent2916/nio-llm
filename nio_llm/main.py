@@ -17,11 +17,11 @@ def main(
     room: str,
     password: str,
     username: str,
-    device_id: str,
     preprompt: str,
+    device_id: str = "nio-llm",
+    homeserver: str = "https://matrix.org",
     ggml_repoid: str = "TheBloke/stable-vicuna-13B-GGML",
     ggml_filename: str = "stable-vicuna-13B.ggmlv3.q5_1.bin",
-    homeserver: str = "https://matrix.org",
     sync_timeout: int = 30000,
 ) -> None:
     """Download llama model from HuggingFace and start the client.
@@ -83,4 +83,9 @@ if __name__ == "__main__":
     )
 
     # run the main program (with environment variables)
-    CLI(main)
+    CLI(
+        components=main,
+        as_positional=False,
+        env_prefix="NIO_LLM",
+        default_env=True,
+    )
