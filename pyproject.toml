@@ -12,10 +12,10 @@ version = "0.1.0"
 nio-llm = "nio_llm.main:main"
 
 [tool.poetry.dependencies]
-jsonargparse = { version = "^4.21.2", extras = ["signatures"] }
 python = "^3.11"
-huggingface-hub = "^0.14.1"
+jsonargparse = { version = "^4.21.2", extras = ["signatures"] }
 llama-cpp-python = "^0.1.50"
+huggingface-hub = "^0.14.1"
 matrix-nio = "^0.20.2"
 rich = "^13.3.5"
 
@@ -78,3 +78,7 @@ profile = "black"
 python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
