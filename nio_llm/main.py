@@ -4,8 +4,8 @@ import asyncio
 import logging
 from pathlib import Path
 
-import click
 from huggingface_hub import hf_hub_download
+from jsonargparse import CLI
 from rich.logging import RichHandler
 
 from nio_llm.client import LLMClient
@@ -13,81 +13,38 @@ from nio_llm.client import LLMClient
 logger = logging.getLogger("nio-llm.main")
 
 
-@click.command()
-@click.option(
-    "--homeserver",
-    "-h",
-    help="The homeserver to connect to.",
-    default="https://matrix.org",
-    show_default=True,
-)
-@click.option(
-    "--username",
-    "-u",
-    help="The username to log in as.",
-    required=True,
-)
-@click.option(
-    "--password",
-    "-p",
-    help="The password to log in with.",
-    required=True,
-)
-@click.option(
-    "--room",
-    "-r",
-    help="The room to join.",
-    required=True,
-)
-@click.option(
-    "--device-id",
-    "-d",
-    help="The device ID to use.",
-    default="nio-llm",
-    show_default=True,
-)
-@click.option(
-    "--preprompt",
-    "-t",
-    help="The preprompt to use.",
-    required=True,
-)
-@click.option(
-    "--ggml-repoid",
-    "-g",
-    help="The HuggingFace Hub repo ID to download the model from.",
-    default="TheBloke/stable-vicuna-13B-GGML",
-    show_default=True,
-)
-@click.option(
-    "--ggml-filename",
-    "-f",
-    help="The HuggingFace Hub filename to download the model from.",
-    default="stable-vicuna-13B.ggmlv3.q5_1.bin",
-    show_default=True,
-)
-@click.option(
-    "--sync-timeout",
-    "-s",
-    help="The timeout to use when syncing with the homeserver.",
-    default=30000,
-    show_default=True,
-)
 def main(
-    *,
     room: str,
     password: str,
     username: str,
     device_id: str,
     preprompt: str,
-    homeserver: str,
-    ggml_repoid: str,
-    ggml_filename: str,
-    sync_timeout: int,
+    ggml_repoid: str = "TheBloke/stable-vicuna-13B-GGML",
+    ggml_filename: str = "stable-vicuna-13B.ggmlv3.q5_1.bin",
+    homeserver: str = "https://matrix.org",
+    sync_timeout: int = 30000,
 ) -> None:
-    """Run the main program.
+    """Download llama model from HuggingFace and start the client.
 
-    Download the model from HuggingFace Hub and start the async loop.
+    Args:
+        room (`str`):
+            The room to join.
+        password (`str`):
+            The password to log in with.
+        username (`str`):
+            The username to log in as.
+        device_id (`str`):
+            The device ID to use.
+        preprompt (`str`):
+            The preprompt to use.
+        ggml_repoid (`str`, default `"TheBloke/stable-vicuna-13B-GGML"`):
+            The HuggingFace Hub repo ID to download the model from.
+        ggml_filename (`str`, default `"stable-vicuna-13B.ggmlv3.q5_1.bin"`):
+            The HuggingFace Hub filename to download the model from.
+        homeserver (`str`, default `"matrix.org"`):
+            The homeserver to connect to.
+        sync_timeout (`int`, default `30000`):
+            The timeout to use when syncing with the homeserver.
     """
     # download the model
     ggml_path = Path(
@@ -126,4 +83,4 @@ if __name__ == "__main__":
     )
 
     # run the main program (with environment variables)
-    main(auto_envvar_prefix="NIOLLM")
+    CLI(main)
