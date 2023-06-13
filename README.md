@@ -6,12 +6,6 @@
 
 You own little LLM in your matrix chatroom.
 
-## Installation
-
-```bash
-pip install git+https://github.com/Laurent2916/nio-llm.git
-```
-
 ## Usage
 
 This project uses [jsonargparse](https://github.com/omni-us/jsonargparse/) to help with the command line arguments.
