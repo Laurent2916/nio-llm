@@ -1,7 +1,9 @@
 {
   "recommendations": [
-    "editorconfig.editorconfig",
     "charliermarsh.ruff",
+    "editorconfig.editorconfig",
+    "ms-python.black-formatter",
     "ms-python.python",
+    "tamasfe.even-better-toml",
   ]
 }

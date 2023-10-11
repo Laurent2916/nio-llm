@@ -1,18 +1,15 @@
-"""A Matrix client that uses Llama to respond to messages."""
-
 import logging
 import time
 from collections import deque
-from pathlib import Path
 
-from llama_cpp import Llama
+import openai
 from nio import AsyncClient, MatrixRoom, RoomMessageText
 
 logger = logging.getLogger("nio-llm.client")
 
 
 class LLMClient(AsyncClient):
-    """A Matrix client that uses Llama to respond to messages."""
+    """A Matrix client that uses llama.cpp to respond to messages."""
 
     def __init__(
         self,
@@ -20,18 +17,33 @@ class LLMClient(AsyncClient):
         homeserver: str,
         device_id: str,
         preprompt: str,
-        ggml_path: Path,
         room: str,
-    ):
+        openai_api_key: str,
+        openai_api_endpoint: str,
+        openai_temperature: float,
+        openai_max_tokens: int,
+    ) -> None:
         """Create a new LLMClient instance.
 
         Args:
-            username (`str`): The username to log in as.
-            homeserver (`str`): The homeserver to connect to.
-            device_id (`str`): The device ID to use.
-            preprompt (`str`): The preprompt to use.
-            ggml_path (`Path`): The path to the GGML model.
-            room (`str`): The room to join.
+            username (`str`):
+                The username to log in as.
+            homeserver (`str`):
+                The homeserver to connect to.
+            device_id (`str`):
+                The device ID to use.
+            preprompt (`str`):
+                The preprompt to use.
+            room (`str`):
+                The room to join.
+            openai_api_key (`str`):
+                The OpenAI API key to use.
+            openai_api_endpoint (`str`):
+                The OpenAI API endpoint to use.
+            openai_temperature (`float`):
+                The OpenAI temperature to use.
+            openai_max_tokens (`int`):
+                The OpenAI max tokens to use.
         """
         self.uid = f"@{username}:{homeserver.removeprefix('https://')}"
         self.spawn_time = time.time() * 1000
@@ -39,18 +51,17 @@ class LLMClient(AsyncClient):
         self.preprompt = preprompt
         self.room = room
 
-        # create the AsyncClient instance
+        # setup openai settings
+        openai.api_base = openai_api_endpoint
+        openai.api_key = openai_api_key
+        self.openai_temperature = openai_temperature
+        self.openai_max_tokens = openai_max_tokens
+
+        # create nio AsyncClient instance
         super().__init__(
             user=self.uid,
             homeserver=homeserver,
             device_id=device_id,
-        )
-
-        # create the Llama instance
-        self.llm = Llama(
-            model_path=str(ggml_path),
-            n_threads=12,
-            n_ctx=512 + 128,
         )
 
         # create message history queue
@@ -63,8 +74,10 @@ class LLMClient(AsyncClient):
         """Process new messages as they come in.
 
         Args:
-            room (`MatrixRoom`): The room the message was sent in.
-            event (`RoomMessageText`): The message event.
+            room (`MatrixRoom`):
+                The room the message was sent in.
+            event (`RoomMessageText`):
+                The message event.
         """
         logger.debug(f"New RoomMessageText: {event.source}")
 
@@ -93,6 +106,7 @@ class LLMClient(AsyncClient):
 
         # update history
         self.history.append(event)
+        logger.debug(f"Updated history: {self.history}")
 
         # ignore our own messages
         if event.sender == self.user:
@@ -107,51 +121,46 @@ class LLMClient(AsyncClient):
             and f'<a href="https://matrix.to/#/{self.uid}">{self.username}</a>'
             in event.source["content"]["formatted_body"]
         ):
-            logger.debug("Ignoring message not directed at us.")
-            return
-
-        # generate prompt from message and history
-        history = "\n".join(f"<{message.sender}>: {message.body}" for message in self.history)
-        prompt = "\n".join([self.preprompt, history, f"<{self.uid}>:"])
-        tokens = self.llm.tokenize(str.encode(prompt))
-        logger.debug(f"Prompt:\n{prompt}")
-        logger.debug(f"Tokens: {len(tokens)}")
-
-        # ignore prompts that are too long
-        if len(tokens) > 512:
-            logger.debug("Prompt too long, skipping.")
-            await self.room_send(
-                room_id=self.room,
-                message_type="m.room.message",
-                content={
-                    "msgtype": "m.emote",
-                    "body": "reached prompt token limit",
-                },
-            )
+            logger.debug("Ignoring message not mentioning us.")
             return
 
         # enable typing indicator
         await self.room_typing(
             self.room,
             typing_state=True,
-            timeout=100000000,
+            timeout=30000,
         )
+        logger.debug("Enabled typing indicator.")
 
         # generate response using llama.cpp
-        senders = [f"<{message.sender}>" for message in self.history]
-        output = self.llm(
-            prompt,
-            max_tokens=128,
-            stop=[f"<{self.uid}>", "### Human", "### Assistant", *senders],
-            echo=True,
+        response = openai.ChatCompletion.create(
+            model="local-model",
+            messages=[
+                {
+                    "content": self.preprompt,
+                    "role": "system",
+                },
+                *[
+                    {
+                        "content": f"{message.sender}: {message.body}",
+                        "role": "assistant" if message.sender == self.uid else "user",
+                    }
+                    for message in self.history
+                ],
+            ],
+            stop=["<|im_end|>"],
+            temperature=self.openai_temperature,
+            max_tokens=self.openai_max_tokens,
         )
+        logger.debug(f"Generated response: {response}")
 
         # retreive the response
-        output = output["choices"][0]["text"]  # type: ignore
-        output = output.removeprefix(prompt).strip()
+        output = response["choices"][0]["message"]["content"]  # type: ignore
+        output = output.strip().removeprefix(f"{self.uid}:").strip()
 
         # disable typing indicator
         await self.room_typing(self.room, typing_state=False)
+        logger.debug("Disabled typing indicator.")
 
         # send the response
         await self.room_send(
@@ -162,8 +171,9 @@ class LLMClient(AsyncClient):
                 "body": output,
             },
         )
+        logger.debug(f"Sent response: {output}")
 
-    async def start(self, password, sync_timeout=30000):
+    async def start(self, password, sync_timeout=30000) -> None:
         """Start the client.
 
         Args:

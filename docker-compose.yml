@@ -1,0 +1,29 @@
+version: "3.8"
+services:
+  server:
+    build:
+      context: src/nio_llm_server/
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8000
+    volumes:
+      - /home/laurent/.cache/huggingface/hub/:/root/.cache/huggingface/hub/
+    healthcheck:
+      test: ["CMD", "nc", "-z", "-v", "localhost", "8000"]
+    restart: unless-stopped
+
+  client:
+    build:
+      context: src/nio_llm/
+      dockerfile: Dockerfile
+    environment:
+      - NIOLLM_HOMESERVER=$NIOLLM_HOMESERVER
+      - NIOLLM_USERNAME=$NIOLLM_USERNAME
+      - NIOLLM_DEVICE_ID=$NIOLLM_DEVICE_ID
+      - NIOLLM_ROOM=$NIOLLM_ROOM
+      - NIOLLM_PASSWORD=$NIOLLM_PASSWORD
+      - NIOLLM_OPENAI_API_ENDPOINT=$NIOLLM_OPENAI_API_ENDPOINT
+    depends_on:
+      server:
+        condition: service_healthy
+    restart: unless-stopped

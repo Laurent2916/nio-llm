@@ -6,7 +6,7 @@ license = "MIT"
 name = "nio-llm"
 readme = "README.md"
 repository = "https://github.com/Laurent2916/nio-llm.git"
-version = "0.1.0"
+version = "1.0.0"
 
 [tool.poetry.scripts]
 nio-llm = "nio_llm.main:main"
@@ -29,9 +29,21 @@ mypy = "^1.3.0"
 ruff = "^0.0.267"
 
 [tool.ruff]
+target-version = "py311"
 line-length = 120
+ignore-init-module-imports = true
+include = [
+  "*.py",              # regular python files
+  "*.pyi",             # python stub files
+  "*.ipynb",           # jupyter notebooks
+  "**/pyproject.toml", # python config files
+]
 ignore = [
-  "G004", # Logging statement uses f-string
+  "G004",  # Logging statement uses f-string
+  "EM102", # Exception must not use an f-string literal, assign to variable first
+  "D100",  # Missing docstring in public module
+  "D104",  # Missing docstring in public package
+  "N812",  # Lowercase imported as non lowercase
 ]
 select = [
   "A",   # flake8-builtins
@@ -47,6 +59,8 @@ select = [
   "N",   # pep8-naming
   "PIE", # flake8-pie
   "PTH", # flake8-use-pathlib
+  "TD",  # flake8-todo
+  "FIX", # flake8-fixme
   "RET", # flake8-return
   "RUF", # ruff
   "S",   # flake8-bandit
@@ -59,26 +73,28 @@ select = [
 [tool.ruff.pydocstyle]
 convention = "google"
 
+[tool.ruff.isort]
+known-first-party = ["nio_llm"]
+
+[tool.ruff.per-file-ignores]
+"__init__.py" = [
+  "F401", # Imported but unused
+]
+"src/aube/main.py" = [
+  "F401", # Imported but unused
+  "E402", # Module level import not at top of file
+]
+
+[tool.ruff.mccabe]
+max-complexity = 5 # C901
+
 [tool.black]
-include = '\.pyi?$'
-target-version = ["py311"]
-line-length = 120
 exclude = '''
 /(
   \.git
   \.venv
 )/
 '''
-
-[tool.isort]
-multi_line_output = 3
-profile = "black"
-
-[tool.mypy]
-python_version = "3.11"
-warn_return_any = true
-warn_unused_configs = true
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+include = '\.pyi?$'
+line-length = 120
+target-version = ["py311"]
