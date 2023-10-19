@@ -22,6 +22,7 @@ class LLMClient(AsyncClient):
         openai_api_endpoint: str,
         openai_temperature: float,
         openai_max_tokens: int,
+        history_size: int,
     ) -> None:
         """Create a new LLMClient instance.
 
@@ -44,6 +45,8 @@ class LLMClient(AsyncClient):
                 The OpenAI temperature to use.
             openai_max_tokens (`int`):
                 The OpenAI max tokens to use.
+            history_size (`int`, default `3`):
+                The number of messages to keep in history.
         """
         self.uid = f"@{username}:{homeserver.removeprefix('https://')}"
         self.spawn_time = time.time() * 1000
@@ -65,7 +68,7 @@ class LLMClient(AsyncClient):
         )
 
         # create message history queue
-        self.history: deque[RoomMessageText] = deque(maxlen=10)
+        self.history: deque[RoomMessageText] = deque(maxlen=history_size)
 
         # add callbacks
         self.add_event_callback(self.message_callback, RoomMessageText)  # type: ignore
