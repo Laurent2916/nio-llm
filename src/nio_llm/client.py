@@ -137,6 +137,14 @@ class LLMClient(AsyncClient):
         self.history.append(event)
         logger.debug(f"Updated history: {self.history}")
 
+        # update read receipt
+        await self.room_read_markers(
+            room_id=self.room,
+            fully_read_event=event.event_id,
+            read_event=event.event_id,
+        )
+        logger.debug(f"Updated read receipt to event: {event.event_id}")
+
         # ignore our own messages
         if event.sender == self.user:
             logger.debug("Ignoring our own message.")
