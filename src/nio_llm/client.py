@@ -74,14 +74,22 @@ class LLMClient(AsyncClient):
         # add callbacks
         self.add_event_callback(self.message_callback, RoomMessageText)  # type: ignore
 
-    async def typing_loop(self) -> None:
-        """Send typing indicators every 5 seconds."""
+    async def typing_loop(
+        self,
+        sleep_time: int = 10,
+    ) -> None:
+        """Send typing indicators every `sleep_time` seconds.
+
+        Args:
+            sleep_time (`int`, default `10`):
+                The time to sleep between sending typing indicators.
+        """
         logging.debug("Started typing indicator.")
         try:
             while True:
                 logging.debug("Sending typing indicator.")
                 await self.room_typing(self.room, True)
-                await asyncio.sleep(5)
+                await asyncio.sleep(sleep_time)
         except asyncio.CancelledError:
             await self.room_typing(self.room, False)
             logging.debug("Stopped typing indicator.")
