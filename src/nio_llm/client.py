@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import re
 import time
 from collections import deque
 
@@ -190,6 +191,18 @@ class LLMClient(AsyncClient):
         output = response["choices"][0]["message"]["content"]  # type: ignore
         output = output.strip().removeprefix(f"{self.uid}:").strip()
 
+        # replace newlines with <br>
+        formatted_output = output.replace("\n", "<br>")
+
+        # detect mentions and replace them with html mentions
+        formatted_output = re.sub(
+            r"@[^:]+:[^ :]+",
+            lambda match: f'<a href="https://matrix.to/#/{match.group(0)}"></a>',
+            formatted_output,
+        )
+
+        logger.debug(f"Formatted response: {formatted_output}")
+
         # send the response
         await self.room_send(
             room_id=self.room,
@@ -197,6 +210,8 @@ class LLMClient(AsyncClient):
             content={
                 "msgtype": "m.text",
                 "body": output,
+                "format": "org.matrix.custom.html",
+                "formatted_body": formatted_output,
             },
         )
         logger.debug(f"Sent response: {output}")
