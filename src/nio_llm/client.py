@@ -99,6 +99,7 @@ class LLMClient(AsyncClient):
         # ignore thread messages
         if (
             "m.relates_to" in event.source["content"]
+            and "rel_type" in event.source["content"]["m.relates_to"]
             and event.source["content"]["m.relates_to"]["rel_type"] == "m.thread"
         ):
             logger.debug("Ignoring thread message.")
