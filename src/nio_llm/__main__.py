@@ -23,7 +23,7 @@ def main(
     openai_api_endpoint: str = "http://localhost:8000/v1",
     openai_temperature: float = 0,
     openai_max_tokens: int = 256,
-    history_size: int = 3,
+    history_size: int = 5,
 ) -> None:
     """Instantiate and start the client.
 
@@ -60,7 +60,7 @@ def main(
             Defaults to `256`.
         history_size (`int`):
             The number of messages to keep in history.
-            Defaults to `3`.
+            Defaults to `5`.
     """
     # create the client
     client = LLMClient(

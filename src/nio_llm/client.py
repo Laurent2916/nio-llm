@@ -181,7 +181,6 @@ class LLMClient(AsyncClient):
                     for message in self.history
                 ],
             ],
-            stop=["<|im_end|>"],
             temperature=self.openai_temperature,
             max_tokens=self.openai_max_tokens,
         )
