@@ -15,7 +15,7 @@ def main(
     room: str,
     username: str,
     password: str,
-    preprompt: str = "You are a helpful assistant in a multi-agent [matrix] conversation.",
+    preprompt: str = "You are a helpful assistant in a multi-agent conversation. Be as concise as possible.",
     device_id: str = "nio-llm",
     homeserver: str = "https://matrix.org",
     sync_timeout: int = 30000,
