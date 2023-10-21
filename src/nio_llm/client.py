@@ -77,12 +77,12 @@ class LLMClient(AsyncClient):
 
     async def typing_loop(
         self,
-        sleep_time: int = 10,
+        sleep_time: int = 15,
     ) -> None:
         """Send typing indicators every `sleep_time` seconds.
 
         Args:
-            sleep_time (`int`, default `10`):
+            sleep_time (`int`, default `15`):
                 The time to sleep between sending typing indicators.
         """
         logging.debug("Started typing indicator.")
@@ -175,7 +175,7 @@ class LLMClient(AsyncClient):
                 },
                 *[
                     {
-                        "content": f"{message.sender}: {message.body}",
+                        "content": f"<{message.sender}>: {message.body}",
                         "role": "assistant" if message.sender == self.uid else "user",
                     }
                     for message in self.history
@@ -187,18 +187,20 @@ class LLMClient(AsyncClient):
         logger.debug(f"Generated response: {response}")
 
         # retreive the response
-        output = response["choices"][0]["message"]["content"]  # type: ignore
-        output = output.strip().removeprefix(f"{self.uid}:").strip()
+        output = response["choices"][0]["message"]["content"].strip()  # type: ignore
 
-        # replace newlines with <br>
-        formatted_output = output.replace("\n", "<br>")
+        # strip the bot's uid from the response
+        output = output.removeprefix(f"<{self.uid}>:").strip()
 
         # detect mentions and replace them with html mentions
         formatted_output = re.sub(
-            r"@[^:]+:[^ :]+",
+            r"@[a-zA-Z-_]+:[^.]+\.[a-zA-Z]+",
             lambda match: f'<a href="https://matrix.to/#/{match.group(0)}"></a>',
-            formatted_output,
+            output,
         )
+
+        # replace newlines with <br>
+        formatted_output = formatted_output.replace("\n", "<br>")
 
         logger.debug(f"Formatted response: {formatted_output}")
 
